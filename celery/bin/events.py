@@ -94,5 +94,5 @@ def events(ctx, dump, camera, detach, frequency, maxrate, loglevel, **kwargs):
                               **kwargs)
 
         return _run_evtop(app)
-    except Exception as exc:
+    except (ConnectionError, TimeoutError, KeyError) as exc:
         handle_remote_command_error('events', exc)

@@ -133,7 +133,7 @@ def status(ctx, timeout, destination, json, **kwargs):
         replies = ctx.obj.app.control.inspect(timeout=timeout,
                                               destination=destination,
                                               callback=callback).ping()
-    except Exception as exc:
+    except (ConnectionError, TimeoutError) as exc:
         handle_remote_command_error('status', exc)
 
     if not replies:
@@ -189,7 +189,7 @@ def inspect(ctx, command, timeout, destination, json, **kwargs):
                                           callback=callback)
     try:
         replies = inspect._request(command, **arguments)
-    except Exception as exc:
+    except (ConnectionError, TimeoutError) as exc:
         handle_remote_command_error(f'inspect {command}', exc)
 
     if not replies:
@@ -249,7 +249,7 @@ def control(ctx, command, timeout, destination, json):
                                                 callback=callback,
                                                 reply=True,
                                                 arguments=arguments)
-    except Exception as exc:
+    except (ConnectionError, TimeoutError) as exc:
         handle_remote_command_error(f'control {command}', exc)
 
     if not replies:

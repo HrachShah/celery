@@ -156,7 +156,7 @@ def workers(ctx):
     except KeyError:
         try:
             replies = app.control.inspect().stats() or {}
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, AttributeError) as exc:
             handle_remote_command_error('graph workers', exc)
         workers, threads = [], []
         for worker, reply in replies.items():
@@ -176,7 +176,7 @@ def workers(ctx):
 
     try:
         broker_uri = args.get('broker', app.connection_for_read().as_uri())
-    except Exception as exc:
+    except (ConnectionError, TimeoutError, AttributeError) as exc:
         handle_remote_command_error('graph workers', exc)
     broker = Broker(broker_uri)
     backend = Backend(backend) if backend else None

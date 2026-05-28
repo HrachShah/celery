@@ -323,7 +323,7 @@ class PromiseProxy(Proxy):
                              '_Proxy__kwargs')):
         try:
             thing = Proxy._get_current_object(self)
-        except Exception:
+        except RuntimeError:
             raise
         else:
             object.__setattr__(self, '__thing', thing)

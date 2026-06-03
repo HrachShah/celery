@@ -145,7 +145,7 @@ class CursesMonitor:  # pragma: no cover
     def handle_keypress(self):
         try:
             key = self.win.getkey().upper()
-        except Exception:  # pylint: disable=broad-except
+        except curses.error:
             return
         key = self.keyalias.get(key) or key
         handler = self.keymap.get(key)
@@ -167,7 +167,7 @@ class CursesMonitor:  # pragma: no cover
         while 1:
             try:
                 return self.win.getkey().upper()
-            except Exception:  # pylint: disable=broad-except
+            except curses.error:
                 pass
 
     def selection_rate_limit(self):

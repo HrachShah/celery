@@ -207,6 +207,12 @@ class test_crontab_parser:
         with pytest.raises(ParseException):
             crontab_parser(60).parse('*/')
 
+    def test_parse_errors_on_non_numeric_step(self):
+        with pytest.raises(ParseException):
+            crontab_parser(60).parse('*/foo')
+        with pytest.raises(ParseException):
+            crontab_parser(60).parse('5-10/abc')
+
     def test_parse_errors_on_negative_number(self):
         with pytest.raises(ParseException):
             crontab_parser(60).parse('-20')

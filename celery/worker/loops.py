@@ -19,7 +19,14 @@ logger = get_logger(__name__)
 def _quick_drain(connection, timeout=0.1):
     try:
         connection.drain_events(timeout=timeout)
-    except Exception as exc:  # pylint: disable=broad-except
+    except (OSError, socket.timeout) as exc:
+        # drain_events surfaces transient socket failures (timeouts, EAGAIN,
+        # connection resets) which we treat as "nothing to do right now";
+        # anything else is propagated so the consumer can react.
+        # OSError covers the general socket-error family; socket.timeout
+        # is a built-in subclass of OSError but is included explicitly so
+        # the intent is obvious to readers and so older Python versions
+        # (where socket.timeout was a separate alias) behave the same.
         exc_errno = getattr(exc, 'errno', None)
         if exc_errno is not None and exc_errno != errno.EAGAIN:
             raise

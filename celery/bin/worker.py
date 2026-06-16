@@ -122,7 +122,12 @@ def detach(path, argv, logfile=None, pidfile=None, uid=None,
                 path = executable
             os.execv(path, [path] + argv)
             return EX_OK
-        except Exception:  # pylint: disable=broad-except
+        except (OSError, FileNotFoundError, PermissionError):  # pylint: disable=broad-except
+            # os.execv() raises OSError on missing executable, missing
+            # interpreter, ENOEXEC for non-executable files, and
+            # PermissionError for EACCES. Narrowing from Exception keeps
+            # KeyboardInterrupt and other control-flow exceptions from
+            # being swallowed by the worker daemon.
             if app is None:
                 from celery import current_app
                 app = current_app

@@ -48,19 +48,22 @@ def find_pickleable_exception(exc, loads=pickle.loads,
     Arguments:
         exc (BaseException): An exception instance.
         loads: decoder to use.
-        dumps: encoder to use
+        dumps: encoder to use.
+
+    Keyword Arguments:
+        unwanted_base_classes (Tuple[Type[BaseException], ...]): Types to stop at.
 
     Returns:
-        Exception: Nearest pickleable parent exception class
-            (except :exc:`Exception` and parents), or if the exception is
-            pickleable it will return :const:`None`.
+        Exception: Nearest pickleable exception class,
+            or :const:`None` if none was found.
     """
     exc_args = getattr(exc, 'args', [])
     for supercls in itermro(exc.__class__, unwanted_base_classes):
         try:
             superexc = supercls(*exc_args)
             loads(dumps(superexc))
-        except Exception:  # pylint: disable=broad-except
+        except (pickle.PickleError, TypeError, AttributeError,
+                RecursionError):
             pass
         else:
             return superexc
@@ -92,7 +95,8 @@ def ensure_serializable(items, encoder):
         try:
             encoder(arg)
             safe_exc_args.append(arg)
-        except Exception:  # pylint: disable=broad-except
+        except (pickle.PickleError, TypeError, AttributeError,
+                RecursionError):
             safe_exc_args.append(safe_repr(arg))
     return tuple(safe_exc_args)
 
@@ -162,7 +166,8 @@ def get_pickleable_exception(exc):
     """Make sure exception is pickleable."""
     try:
         pickle.loads(pickle.dumps(exc))
-    except Exception:  # pylint: disable=broad-except
+    except (pickle.PickleError, TypeError, AttributeError,
+            RecursionError):
         pass
     else:
         return exc
@@ -176,7 +181,8 @@ def get_pickleable_etype(cls, loads=pickle.loads, dumps=pickle.dumps):
     """Get pickleable exception type."""
     try:
         loads(dumps(cls))
-    except Exception:  # pylint: disable=broad-except
+    except (pickle.PickleError, TypeError, AttributeError,
+            RecursionError):
         return Exception
     else:
         return cls

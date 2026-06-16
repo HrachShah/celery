@@ -8,12 +8,17 @@ import pytest
 from kombu import Queue
 
 from celery.utils.serialization import (STRTOBOOL_DEFAULT_TABLE, UnpickleableExceptionWrapper, ensure_serializable,
-                                        get_pickleable_etype, jsonify, strtobool)
+                                        find_pickleable_exception, get_pickleable_etype,
+                                        get_pickleable_exception, jsonify, strtobool)
 
 if sys.version_info >= (3, 9):
     from zoneinfo import ZoneInfo
 else:
     from backports.zoneinfo import ZoneInfo
+
+
+class _ModuleFine(Exception):
+    """Module-level exception so pickle can resolve its class by name."""
 
 
 class test_AAPickle:
@@ -59,6 +64,74 @@ class test_get_pickleable_etype:
                 raise ValueError('foo')
 
         assert get_pickleable_etype(Unpickleable) is Exception
+
+
+class test_pickle_exceptions_narrow:
+    """The except-clauses in find_pickleable_exception,
+    get_pickleable_exception, get_pickleable_etype, and
+    ensure_serializable are narrowed to the specific failures a pickle
+    roundtrip can raise (pickle.PickleError, TypeError, AttributeError,
+    RecursionError).  These tests pin that contract: in particular
+    BaseException subclasses like KeyboardInterrupt and SystemExit
+    must propagate, not be silently swallowed."""
+
+    def test_find_pickleable_exception_propagates_keyboard_interrupt(self):
+        class Bad(Exception):
+            def __reduce__(self):
+                raise KeyboardInterrupt
+
+        try:
+            find_pickleable_exception(Bad('x'))
+        except KeyboardInterrupt:
+            return
+        raise AssertionError("KeyboardInterrupt must not be swallowed")
+
+    def test_find_pickleable_exception_propagates_system_exit(self):
+        class Bad(Exception):
+            def __reduce__(self):
+                raise SystemExit(2)
+
+        try:
+            find_pickleable_exception(Bad('x'))
+        except SystemExit:
+            return
+        raise AssertionError("SystemExit must not be swallowed")
+
+    def test_get_pickleable_exception_returns_pickleable(self):
+        # _ModuleFine lives at module level so pickle can resolve its
+        # class by name across the dump/load round-trip.
+        e = _ModuleFine('ok')
+        assert get_pickleable_exception(e) is e
+
+    def test_get_pickleable_exception_wraps_unpickleable(self):
+        class LambdaArg(Exception):
+            def __init__(self, fn):
+                self.fn = fn
+                super().__init__(fn)
+        try:
+            raise LambdaArg(lambda x: x)
+        except LambdaArg as e:
+            result = get_pickleable_exception(e)
+        assert isinstance(result, UnpickleableExceptionWrapper)
+
+    def test_ensure_serializable_handles_unpickleable(self):
+        result = ensure_serializable([1, 'a', lambda x: x, None],
+                                      pickle.dumps)
+        # Numeric and string items survive intact; the lambda falls back
+        # to safe_repr; None is pickleable.
+        assert result[0] == 1
+        assert result[1] == 'a'
+        assert isinstance(result[2], str) and '<lambda>' in result[2]
+        assert result[3] is None
+
+    def test_ensure_serializable_propagates_system_exit(self):
+        def explode(_):
+            raise SystemExit(3)
+        try:
+            ensure_serializable([1], explode)
+        except SystemExit:
+            return
+        raise AssertionError("SystemExit must not be swallowed")
 
 
 class test_jsonify:

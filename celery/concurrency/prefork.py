@@ -153,9 +153,17 @@ class TaskPool(BasePool):
 
                 def fire_timers_loop():
                     while not shutdown_event.is_set():
+                        # hub.fire_timers() drives the heartbeats on async
+                        # transports. The documented failure modes are
+                        # OSError (event loop fd closed) and RuntimeError
+                        # (loop already closed during shutdown). A bare
+                        # `except Exception:` was also silently swallowing
+                        # KeyboardInterrupt, which would prevent a Ctrl-C
+                        # sent to a shutting-down worker from terminating
+                        # this thread promptly.
                         try:
                             hub.fire_timers()
-                        except Exception:
+                        except (OSError, RuntimeError):
                             logger.warning(
                                 "Exception in timer thread during prefork on_stop()",
                                 exc_info=True,

@@ -2110,6 +2110,14 @@ class test_merge_dictionaries(CanvasCase):
             'set': {'a', 'b'}
         }
 
+    def test_scalar_values_are_overwritten_when_duplicates_are_not_aggregated(self):
+        d1 = {'foo': 'bar1'}
+        d2 = {'foo': 'bar2'}
+
+        _merge_dictionaries(d1, d2, aggregate_duplicates=False)
+
+        assert d1 == {'foo': 'bar2'}
+
     @pytest.mark.parametrize('d1,d2,expected_result', [
         (
             {'None': None},

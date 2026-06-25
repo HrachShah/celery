@@ -99,10 +99,10 @@ def _merge_dictionaries(d1, d2, aggregate_duplicates=True):
     for key, value in d1.items():
         if key in d2:
             if isinstance(value, dict):
-                _merge_dictionaries(d1[key], d2[key])
-            else:
+                _merge_dictionaries(d1[key], d2[key], aggregate_duplicates=aggregate_duplicates)
+            elif aggregate_duplicates:
                 if isinstance(value, (int, float, str)):
-                    d1[key] = [value] if aggregate_duplicates else value
+                    d1[key] = [value]
                 if isinstance(d2[key], list) and isinstance(d1[key], list):
                     d1[key].extend(d2[key])
                 elif aggregate_duplicates:
@@ -111,6 +111,8 @@ def _merge_dictionaries(d1, d2, aggregate_duplicates=True):
                     else:
                         d1[key] = list(d1[key])
                     d1[key].append(d2[key])
+            else:
+                d1[key] = d2[key]
     for key, value in d2.items():
         if key not in d1:
             d1[key] = value

@@ -336,6 +336,31 @@ def test_rate_limit_string(s, expected):
     assert rate(s) == expected
 
 
+class test_rate_rejects_bad_inputs:
+
+    @pytest.mark.parametrize('bad_bool', [True, False])
+    def test_rate_rejects_bool_input(self, bad_bool):
+        # `bool` is a subclass of `int`, so `isinstance(True, int)` is True
+        # and the original implementation would return the literal `True`
+        # (a bool, not a float) instead of either coercing it or rejecting
+        # it.  Callers that expect a numeric rate were getting a `bool`
+        # back and breaking arithmetic on it.
+        with pytest.raises(TypeError, match='rate must be a number or string'):
+            rate(bad_bool)
+
+    @pytest.mark.parametrize('modifier', ['x', 'd', 'ms', 'S'])
+    def test_rate_rejects_unknown_modifier(self, modifier):
+        bad = f'100/{modifier}'
+        with pytest.raises(ValueError, match='Invalid rate modifier'):
+            rate(bad)
+
+    @pytest.mark.parametrize('value', ['abc', '1.2.3', '--7'])
+    def test_rate_rejects_unparseable_number(self, value):
+        bad = f'{value}/s'
+        with pytest.raises(ValueError, match='Invalid rate value'):
+            rate(bad)
+
+
 class test_ffwd:
 
     def test_repr(self):

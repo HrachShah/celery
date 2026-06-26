@@ -252,11 +252,27 @@ def remaining(
 
 def rate(r: str) -> float:
     """Convert rate string (`"100/m"`, `"2/h"` or `"0.5/s"`) to seconds."""
-    if r:
-        if isinstance(r, str):
-            ops, _, modifier = r.partition('/')
-            return RATE_MODIFIER_MAP[modifier or 's'](float(ops)) or 0
-        return r or 0
+    if isinstance(r, bool):
+        # `bool` is a subclass of `int`; without this guard, `rate(True)`
+        # returns the literal `True` (a bool, not a float) while
+        # `rate(False)` returns `0`.  Both behaviours leak into callers
+        # that expect a numeric rate.
+        raise TypeError(
+            f'rate must be a number or string, got bool: {r!r}')
+    if isinstance(r, str):
+        ops, _, modifier = r.partition('/')
+        if modifier and modifier not in RATE_MODIFIER_MAP:
+            raise ValueError(
+                f'Invalid rate modifier {modifier!r}: '
+                f'must be one of {sorted(RATE_MODIFIER_MAP)!r}')
+        try:
+            value = float(ops)
+        except ValueError as exc:
+            raise ValueError(
+                f'Invalid rate value {ops!r}: {exc}') from exc
+        return RATE_MODIFIER_MAP[modifier or 's'](value)
+    if isinstance(r, numbers.Real):
+        return float(r)
     return 0
 
 

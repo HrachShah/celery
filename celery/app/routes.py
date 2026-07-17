@@ -82,6 +82,7 @@ class Router:
         else:
             # can use defaults from configured queue, but override specific
             # things (like the routing_key): great for topic exchanges.
+            route = route.copy()
             queue = route.pop('queue', None)
 
         if queue:

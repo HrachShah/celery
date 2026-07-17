@@ -155,6 +155,15 @@ class test_lookup_route(RouteCase):
         dest = x.expand_destination({'queue': queue})
         assert dest['queue'] is queue
 
+    def test_expand_destination_does_not_mutate_route(self):
+        route = {'queue': 'foo', 'routing_key': 'custom'}
+        x = Router(self.app, {}, self.app.amqp.queues)
+
+        dest = x.expand_destination(route)
+
+        assert route == {'queue': 'foo', 'routing_key': 'custom'}
+        assert dest['queue'].name == 'foo'
+
     def test_lookup_paths_traversed(self):
         self.simple_queue_setup()
         R = routes.prepare((

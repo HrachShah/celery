@@ -40,16 +40,19 @@ class MapRoute:
 
     def __call__(self, name, *args, **kwargs):
         try:
-            return dict(self.map[name])
+            route = self.map[name]
         except KeyError:
-            pass
-        except ValueError:
-            return {'queue': self.map[name]}
+            route = None
+        if route is not None:
+            try:
+                return dict(route)
+            except (TypeError, ValueError):
+                return {'queue': route}
         for regex, route in self.patterns.items():
             if regex.match(name):
                 try:
                     return dict(route)
-                except ValueError:
+                except (TypeError, ValueError):
                     return {'queue': route}
 
 

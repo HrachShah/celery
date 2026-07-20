@@ -75,6 +75,11 @@ class test_MapRoute(RouteCase):
         assert expand(route(self.mytask.name))['queue'].name == 'foo'
         assert route('celery.awesome') is None
 
+    def test_route_for_task_with_none_destination(self):
+        route = routes.MapRoute({self.mytask.name: None})
+
+        assert route(self.mytask.name) is None
+
     def test_route_for_task(self):
         set_queues(self.app, foo=self.a_queue, bar=self.b_queue)
         expand = E(self.app, self.app.amqp.queues)

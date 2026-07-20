@@ -75,6 +75,12 @@ class test_MapRoute(RouteCase):
         assert expand(route(self.mytask.name))['queue'].name == 'foo'
         assert route('celery.awesome') is None
 
+    def test_route_for_task_with_non_string_literal_key(self):
+        route = routes.MapRoute({123: {'queue': 'foo'}})
+
+        assert route(123) == {'queue': 'foo'}
+        assert route('123') is None
+
     def test_route_for_task_with_none_destination(self):
         route = routes.MapRoute({self.mytask.name: None})
 

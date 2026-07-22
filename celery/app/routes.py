@@ -46,7 +46,7 @@ class MapRoute:
         except ValueError:
             return {'queue': self.map[name]}
         for regex, route in self.patterns.items():
-            if regex.match(name):
+            if isinstance(name, str) and regex.match(name):
                 try:
                     return dict(route)
                 except ValueError:

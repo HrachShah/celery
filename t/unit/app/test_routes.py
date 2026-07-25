@@ -89,6 +89,11 @@ class test_MapRoute(RouteCase):
             assert eroute[key] == value
         assert route('celery.awesome') is None
 
+    def test_glob_route_with_none_destination_is_unmatched(self):
+        route = routes.MapRoute({'proj.tasks.*': None})
+
+        assert route('proj.tasks.anything') is None
+
     def test_route_for_task__glob(self):
         from re import compile
 

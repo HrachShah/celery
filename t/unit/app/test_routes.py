@@ -79,6 +79,10 @@ class test_MapRoute(RouteCase):
         route = routes.MapRoute({'proj.tasks.*': {'queue': 'foo'}})
 
         assert route(123) is None
+    def test_non_string_route_key_is_literal(self):
+        route = routes.MapRoute({123: {'queue': 'foo'}})
+
+        assert route(123) == {'queue': 'foo'}
 
     def test_route_for_task(self):
         set_queues(self.app, foo=self.a_queue, bar=self.b_queue)

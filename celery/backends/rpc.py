@@ -85,7 +85,20 @@ class ResultConsumer(BaseResultConsumer):
             old_queues = list(self._consumer.queues)
             try:
                 self._consumer.cancel()
-            except Exception:
+            except (kombu.exceptions.OperationalError,
+                    kombu.exceptions.KombuError,
+                    OSError):
+                # cancel() can fail on a broker that has already torn
+                # the channel down (OPERATIONAL_ERROR / connection
+                # reset), on a channel that was already closed by the
+                # server (CHANNEL_ERROR), or on the local OS layer
+                # (OSError for closed socket / EBADF). All of these
+                # are expected on the reconnect path; the connection
+                # and consumer are about to be replaced below
+                # anyway. The previous bare `except Exception:` was
+                # also silently swallowing KeyboardInterrupt and
+                # SystemExit, which is a real problem on a worker
+                # that needs to be Ctrl-C-able during a reconnect.
                 logger.debug(
                     'RPC result consumer: error while cancelling stale '
                     'consumer during reconnect',
@@ -95,7 +108,14 @@ class ResultConsumer(BaseResultConsumer):
         if self._connection is not None:
             try:
                 self._connection.close()
-            except Exception:
+            except (kombu.exceptions.OperationalError,
+                    kombu.exceptions.KombuError,
+                    OSError):
+                # Same set of recoverable failures as above for
+                # close() — a broker that has already torn the
+                # connection down, a half-closed socket, etc. The
+                # connection is about to be replaced with a fresh
+                # one, so logging and continuing is the right move.
                 logger.debug(
                     'RPC result consumer: error while closing stale '
                     'connection during reconnect',

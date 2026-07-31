@@ -356,6 +356,18 @@ def test_rate_limit_string(s, expected):
     assert rate(s) == expected
 
 
+@pytest.mark.parametrize('value', ['nan', 'inf', '-inf'])
+def test_rate_rejects_non_finite_values(value):
+    with pytest.raises(ValueError, match='must be finite'):
+        rate(f'{value}/s')
+
+
+@pytest.mark.parametrize('value', [float('nan'), float('inf'), float('-inf')])
+def test_numeric_rate_rejects_non_finite_values(value):
+    with pytest.raises(ValueError, match='must be finite'):
+        rate(value)
+
+
 class test_ffwd:
 
     def test_repr(self):

@@ -59,16 +59,41 @@ def test_parse_iso8601_malformed_strings():
         with pytest.raises(ValueError):
             parse_iso8601(s)
 
-    # This string has a timezone format that is ignored by the parser, resulting in a naive datetime
-    ignored_tz_string = "2023-10-26T10:30:00+05:AA"
-    dt_ignored_tz = parse_iso8601(ignored_tz_string)
-    assert dt_ignored_tz == datetime(2023, 10, 26, 10, 30, 0)
-    assert dt_ignored_tz.tzinfo is None
+    # A timezone with non-digit characters in the offset no longer matches the
+    # regex end-to-end, so the parser now raises ValueError instead of silently
+    # stripping the bad timezone and returning a naive datetime.
+    malformed_tz_string = "2023-10-26T10:30:00+05:AA"
+    with pytest.raises(ValueError, match="unable to parse date string"):
+        parse_iso8601(malformed_tz_string)
 
-    # This string does not match the main ISO8601_REGEX pattern correctly, leading to None groups
+    # The compact "20231026T103000Z" form does not match the regex (which
+    # requires '-' separators between the date components), so the parser
+    # raises ValueError instead of crashing with TypeError from int(None).
     unparseable_string = "20231026T103000Z"
-    with pytest.raises(TypeError):  # Expects TypeError due to int(None)
+    with pytest.raises(ValueError, match="unable to parse date string"):
         parse_iso8601(unparseable_string)
+
+
+@pytest.mark.parametrize(
+    "datestring",
+    [
+        "2023-10-26T10:30:00garbage",
+        "2023-10-26T10:30:00+05:00extra",
+        "2023-10-26T10:30:00.123Ztrailing",
+        "2023-10-26garbage",
+        "2023-10-26T10:30junk",
+        "2023-10-26T10:30:00+junk",
+        "2023garbage",
+        "2023-10garbage",
+    ],
+)
+def test_parse_iso8601_rejects_trailing_garbage(datestring):
+    # Previously the regex used re.match which only anchors at the start of
+    # the string, so trailing characters after a valid ISO-8601 prefix were
+    # silently dropped and the parser returned a datetime for the prefix.
+    # Switching to fullmatch means the whole string must match the pattern.
+    with pytest.raises(ValueError, match="unable to parse date string"):
+        parse_iso8601(datestring)
 
 
 def test_parse_iso8601_deprecation_warning():

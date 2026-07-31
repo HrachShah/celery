@@ -368,6 +368,12 @@ def test_numeric_rate_rejects_non_finite_values(value):
         rate(value)
 
 
+@pytest.mark.parametrize('value', ['-1/s', -1])
+def test_rate_rejects_negative_values(value):
+    with pytest.raises(ValueError, match='must be non-negative'):
+        rate(value)
+
+
 class test_ffwd:
 
     def test_repr(self):

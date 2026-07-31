@@ -267,11 +267,15 @@ def rate(r: str) -> float:
             raise ValueError(f'Invalid rate value {ops!r}: {exc}') from exc
         if not math.isfinite(value):
             raise ValueError(f'Invalid rate value {ops!r}: must be finite')
+        if value < 0:
+            raise ValueError(f'Invalid rate value {ops!r}: must be non-negative')
         return RATE_MODIFIER_MAP[modifier or 's'](value)
     if isinstance(r, numbers.Real):
         value = float(r)
         if not math.isfinite(value):
             raise ValueError(f'Invalid rate value {r!r}: must be finite')
+        if value < 0:
+            raise ValueError(f'Invalid rate value {r!r}: must be non-negative')
         return value
     if r is None:
         return 0

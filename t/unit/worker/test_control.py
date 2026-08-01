@@ -470,6 +470,12 @@ class test_ControlPanel:
             'task_name': 'tasks.add', 'rate_limit': 'x1240301#%!'})
         assert 'Invalid rate limit string' in e.get('error')
 
+    def test_rate_limit_rejects_invalid_type(self):
+        response = self.panel.handle('rate_limit', arguments={
+            'task_name': 'tasks.add', 'rate_limit': object(),
+        })
+        assert 'Invalid rate limit string' in response.get('error')
+
     def test_rate_limit(self):
 
         class xConsumer:

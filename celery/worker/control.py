@@ -271,7 +271,7 @@ def rate_limit(state, task_name, rate_limit, **kwargs):
     #     Outside of this scope that is a function.
     try:
         rate(rate_limit)
-    except ValueError as exc:
+    except (TypeError, ValueError) as exc:
         return nok(f'Invalid rate limit string: {exc!r}')
 
     try:

@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import logging
+import math
 import numbers
 import os
 import random
@@ -255,7 +256,10 @@ def rate(r: str) -> float:
     if r:
         if isinstance(r, str):
             ops, _, modifier = r.partition('/')
-            return RATE_MODIFIER_MAP[modifier or 's'](float(ops)) or 0
+            value = float(ops)
+            if not math.isfinite(value):
+                raise ValueError(f"Invalid rate value {ops!r}: must be finite")
+            return RATE_MODIFIER_MAP[modifier or 's'](value) or 0
         return r or 0
     return 0
 

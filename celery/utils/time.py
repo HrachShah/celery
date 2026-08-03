@@ -261,6 +261,8 @@ def rate(r: str) -> float:
                 raise ValueError(
                     f"Invalid rate modifier {modifier!r}: must be one of ['h', 'm', 's']"
                 )
+            if not ops:
+                raise ValueError("Invalid rate value '': must be a number")
             try:
                 value = float(ops)
             except ValueError as exc:

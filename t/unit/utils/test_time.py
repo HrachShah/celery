@@ -362,6 +362,11 @@ def test_rate_rejects_malformed_modifier(value):
         rate(value)
 
 
+def test_rate_rejects_missing_value():
+    with pytest.raises(ValueError, match="Invalid rate value ''"):
+        rate('/s')
+
+
 class test_ffwd:
 
     def test_repr(self):

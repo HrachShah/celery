@@ -254,8 +254,18 @@ def rate(r: str) -> float:
     """Convert rate string (`"100/m"`, `"2/h"` or `"0.5/s"`) to seconds."""
     if r:
         if isinstance(r, str):
-            ops, _, modifier = r.partition('/')
-            return RATE_MODIFIER_MAP[modifier or 's'](float(ops)) or 0
+            ops, separator, modifier = r.partition('/')
+            if separator and not modifier:
+                raise ValueError("Invalid rate modifier '': must be one of ['h', 'm', 's']")
+            if modifier and modifier not in RATE_MODIFIER_MAP:
+                raise ValueError(
+                    f"Invalid rate modifier {modifier!r}: must be one of ['h', 'm', 's']"
+                )
+            try:
+                value = float(ops)
+            except ValueError as exc:
+                raise ValueError(f"Invalid rate value {ops!r}: {exc}") from exc
+            return RATE_MODIFIER_MAP[modifier or 's'](value) or 0
         return r or 0
     return 0
 

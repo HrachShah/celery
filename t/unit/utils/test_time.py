@@ -356,6 +356,12 @@ def test_rate_limit_string(s, expected):
     assert rate(s) == expected
 
 
+@pytest.mark.parametrize('value', ['1/', '1/x', '1/m/x'])
+def test_rate_rejects_malformed_modifier(value):
+    with pytest.raises(ValueError, match='Invalid rate modifier'):
+        rate(value)
+
+
 class test_ffwd:
 
     def test_repr(self):

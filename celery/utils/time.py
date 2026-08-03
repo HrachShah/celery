@@ -252,11 +252,15 @@ def remaining(
 
 def rate(r: str) -> float:
     """Convert rate string (`"100/m"`, `"2/h"` or `"0.5/s"`) to seconds."""
+    if isinstance(r, bool):
+        raise ValueError(f"Invalid rate value {r!r}: must be a number")
     if r:
         if isinstance(r, str):
             ops, _, modifier = r.partition('/')
             return RATE_MODIFIER_MAP[modifier or 's'](float(ops)) or 0
-        return r or 0
+        if isinstance(r, numbers.Real) and not isinstance(r, bool):
+            return r
+        raise ValueError(f"Invalid rate value {r!r}: must be a number")
     return 0
 
 

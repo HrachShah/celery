@@ -362,6 +362,24 @@ def test_rate_rejects_non_numeric_values(value):
         rate(value)
 
 
+@pytest.mark.parametrize('value', ['not-a-rate/s'])
+def test_rate_rejects_malformed_numeric_values(value):
+    with pytest.raises(ValueError, match='must be a number'):
+        rate(value)
+
+
+@pytest.mark.parametrize('value', ['1/s/extra'])
+def test_rate_rejects_unknown_modifiers(value):
+    with pytest.raises(ValueError, match='must be one of'):
+        rate(value)
+
+
+@pytest.mark.parametrize('value', ['nan/s', 'inf/m', '-inf/h'])
+def test_rate_rejects_nonfinite_values(value):
+    with pytest.raises(ValueError, match='must be finite'):
+        rate(value)
+
+
 class test_ffwd:
 
     def test_repr(self):

@@ -98,9 +98,17 @@ def _find_option_with_arg(argv, short_opts=None, long_opts=None):
             if long_opts and arg.startswith('--'):
                 name, sep, val = arg.partition('=')
                 if name in long_opts:
-                    return val if sep else argv[i + 1]
+                    if sep:
+                        return val
+                    try:
+                        return argv[i + 1]
+                    except IndexError as exc:
+                        raise KeyError(name) from exc
             if short_opts and arg in short_opts:
-                return argv[i + 1]
+                try:
+                    return argv[i + 1]
+                except IndexError as exc:
+                    raise KeyError(arg) from exc
     raise KeyError('|'.join(short_opts or [] + long_opts or []))
 
 

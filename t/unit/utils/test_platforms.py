@@ -42,6 +42,14 @@ class test_find_option_with_arg:
         assert _find_option_with_arg(
             ['-f', 'bar'], short_opts=['-f']) == 'bar'
 
+    def test_missing_long_opt_value(self):
+        with pytest.raises(KeyError):
+            _find_option_with_arg(['--foo'], long_opts=['--foo'])
+
+    def test_missing_short_opt_value(self):
+        with pytest.raises(KeyError):
+            _find_option_with_arg(['-f'], short_opts=['-f'])
+
 
 @t.skip.if_win32
 def test_fd_by_path():

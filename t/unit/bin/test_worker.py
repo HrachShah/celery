@@ -7,6 +7,7 @@ from click.testing import CliRunner
 from celery.app.log import Logging
 from celery.bin.celery import celery
 from celery.worker.consumer.tasks import Tasks
+from celery.bin.worker import AUTOSCALE
 
 
 @pytest.fixture(scope='session')
@@ -125,3 +126,17 @@ def test_disable_prefetch_ignored_for_non_redis_brokers(mock_app, mock_consumer)
 
     # Should not modify can_consume method for non-Redis brokers
     assert mock_consumer.task_consumer.channel.qos.can_consume == original_can_consume
+
+
+@pytest.mark.parametrize(
+    "value, expected",
+    (("10", (10, 0)), ("10,3", (10, 3)), ("3,10", (10, 3))),
+)
+def test_autoscale_converts_worker_counts(value, expected):
+    assert AUTOSCALE.convert(value, None, None) == expected
+
+
+@pytest.mark.parametrize("value", ("-1", "10,-1"))
+def test_autoscale_rejects_negative_worker_counts(value):
+    with pytest.raises(Exception, match="non-negative"):
+        AUTOSCALE.convert(value, None, None)

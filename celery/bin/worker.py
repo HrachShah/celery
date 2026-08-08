@@ -78,23 +78,25 @@ class Autoscale(ParamType):
     name = "<min workers>, <max workers>"
 
     def convert(self, value, param, ctx):
-        value = value.split(',')
+        values = value.split(',')
 
-        if len(value) > 2:
+        if len(values) > 2:
             self.fail("Expected two comma separated integers or one integer."
-                      f"Got {len(value)} instead.")
-
-        if len(value) == 1:
-            try:
-                value = (int(value[0]), 0)
-            except ValueError:
-                self.fail(f"Expected an integer. Got {value} instead.")
+                      f"Got {len(values)} instead.")
 
         try:
-            return tuple(reversed(sorted(map(int, value))))
+            numbers = [int(item) for item in values]
         except ValueError:
-            self.fail("Expected two comma separated integers."
-                      f"Got {value.join(',')} instead.")
+            self.fail("Expected integer worker counts."
+                      f"Got {','.join(values)} instead.")
+
+        if any(number < 0 for number in numbers):
+            self.fail("Expected non-negative worker counts.")
+
+        if len(numbers) == 1:
+            numbers.append(0)
+
+        return tuple(reversed(sorted(numbers)))
 
 
 CELERY_BEAT = CeleryBeat()

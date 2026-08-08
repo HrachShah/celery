@@ -120,8 +120,10 @@ class Pool(bootsteps.StartStopStep):
         w.min_concurrency = w.concurrency
         self.optimization = w.optimization
         if isinstance(autoscale, str):
-            max_c, _, min_c = autoscale.partition(',')
-            autoscale = [int(max_c), min_c and int(min_c) or 0]
+            parts = autoscale.split(',')
+            if len(parts) > 2 or not parts[0]:
+                raise ValueError('Invalid autoscale value: expected max[,min]')
+            autoscale = [int(parts[0]), int(parts[1]) if len(parts) == 2 and parts[1] else 0]
         w.autoscale = autoscale
         if w.autoscale:
             w.max_concurrency, w.min_concurrency = w.autoscale

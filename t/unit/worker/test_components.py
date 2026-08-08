@@ -48,6 +48,12 @@ class test_Hub:
 
 class test_Pool:
 
+    @pytest.mark.parametrize('autoscale', ['10,2,3', ',2'])
+    def test_rejects_malformed_autoscale_string(self, autoscale):
+        w = Mock()
+        with pytest.raises(ValueError, match=r'expected max\[,min\]'):
+            Pool(w, autoscale=autoscale)
+
     def test_close_terminate(self):
         w = Mock()
         comp = Pool(w)

@@ -124,6 +124,7 @@ class Pool(bootsteps.StartStopStep):
             if len(parts) > 2 or not parts[0]:
                 raise ValueError('Invalid autoscale value: expected max[,min]')
             autoscale = [int(parts[0]), int(parts[1]) if len(parts) == 2 and parts[1] else 0]
+            autoscale.sort(reverse=True)
         w.autoscale = autoscale
         if w.autoscale:
             w.max_concurrency, w.min_concurrency = w.autoscale

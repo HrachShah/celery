@@ -54,6 +54,11 @@ class test_Pool:
         with pytest.raises(ValueError, match=r'expected max\[,min\]'):
             Pool(w, autoscale=autoscale)
 
+    def test_orders_autoscale_string_as_max_then_min(self):
+        w = Mock()
+        Pool(w, autoscale='2,10')
+        assert w.autoscale == [10, 2]
+
     def test_close_terminate(self):
         w = Mock()
         comp = Pool(w)

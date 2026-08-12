@@ -175,7 +175,10 @@ def revoke_by_stamped_headers(state, headers, terminate=False, signal=None, **kw
     signum = _signals.signum(signal or TERM_SIGNAME)
 
     if isinstance(headers, list):
-        headers = {h.split('=')[0]: h.split('=')[1] for h in headers}
+        try:
+            headers = dict(h.split('=', 1) for h in headers)
+        except (AttributeError, IndexError, ValueError):
+            return nok('Malformed stamped headers')
 
     for header, stamps in headers.items():
         updated_stamps = maybe_list(worker_state.revoked_stamps.get(header) or []) + list(maybe_list(stamps))

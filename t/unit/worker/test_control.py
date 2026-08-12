@@ -589,6 +589,16 @@ class test_ControlPanel:
         finally:
             worker_state.task_ready(request)
 
+    def test_revoke_by_stamped_headers_rejects_malformed_list(self):
+        state = self.create_state()
+        state.consumer = Mock()
+
+        before = dict(revoked_stamps)
+        result = control.revoke_by_stamped_headers(state, ['missing-equals'])
+
+        assert result == {'error': 'Malformed stamped headers'}
+        assert dict(revoked_stamps) == before
+
     @pytest.mark.parametrize(
         "header_to_revoke",
         [
